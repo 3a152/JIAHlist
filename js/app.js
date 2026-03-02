@@ -22,13 +22,35 @@ function confirmDanger(url) {
   modal.show()
 }
 
-function renderCards() {
+/* lormex lormex lormex.. lormex support by sloppey */
+async function getLormex() {
+  let revivals = {};
+
+  /* first pass compute current ccu */
+  await fetch("https://corsproxy.io/?url=https://lormex.xyz/api/revivals?page=1&pageSize=420")
+    .then(res => res.json())
+    .then(json => {
+      for (var i in json.items) {
+        var rev = json.items[i];
+        // name and slug is stored because some revs like syntax have a slug of synt2x when on this site its listed as syntax 2. dumb hack
+        revivals[rev.slug] = rev.dynamic.online
+        revivals[rev.name.toLowerCase()] = rev.dynamic.online
+      }
+    })
+    .catch(err => console.error("Error:", err));
+
+    return revivals
+}
+
+async function renderCards() {
   const container = document.getElementById("cardContainer")
   container.innerHTML = ""
 
   const start = (currentPage - 1) * cardsPerPage
   const end = start + cardsPerPage
   const paginated = boards.slice(start, end)
+
+  const lormexData = await getLormex(); // camel case FTW
 
   paginated.forEach(board => {
     const col = document.createElement("div")
@@ -71,6 +93,7 @@ function renderCards() {
             <button class="btn btn-primary btn-sm me-2">Visit</button>
             ${discordBtn}
           </div>
+          <span style="position:absolute; bottom:6px; right:10px; font-size:0.85rem; color:#6c757d;">CCU: ${lormexData[board.name.toLowerCase()] ?? "N/A"} </span>        
         </div>
       </div>
     `
